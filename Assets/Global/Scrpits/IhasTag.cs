@@ -3,6 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 标签系统，用于储存数据
+/// </summary>
+[AddComponentMenu("Utils/Tags")]
 public class IhasTag : MonoBehaviour
 {
     //标签系统，用于对象数储存与交互
@@ -99,7 +103,5 @@ public class IhasTag : MonoBehaviour
     void Awake()
     {
         Interpret();
-        Debug.Log(ToString());
-        Debug.Log(getBool("death").ToString());
     }
 }

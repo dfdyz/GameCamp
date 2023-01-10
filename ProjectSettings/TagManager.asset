@@ -3,17 +3,19 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - player_entity
+  - mob_entity
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - World
   - Water
   - UI
-  - 
-  - 
-  - 
+  - Player
+  - Mob
+  - Item
   - 
   - 
   - 
