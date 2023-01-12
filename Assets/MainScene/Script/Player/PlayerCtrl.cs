@@ -15,6 +15,8 @@ public class PlayerCtrl : MonoBehaviour
     private GameObject fireball;
     [SerializeField]
     private GameObject bigfireball;
+    [SerializeField]
+    private CinemachineBrain cam;
     [Header(header: "SensorField")]
     [SerializeField] 
     private GameObject SensorRoot;
