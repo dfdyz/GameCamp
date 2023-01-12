@@ -9,15 +9,35 @@ public class PlayerCtrl : MonoBehaviour
     [Header(header: "Instance")]
     public IPhysics physics;
     public IhasTag ITag;
-    [Header(header: "SensorField")]
     [SerializeField]
-    private HitField GroundSensor;
+    private HealthBarCtrl healthBar;
+    [SerializeField]
+    private GameObject fireball;
+    [SerializeField]
+    private GameObject bigfireball;
+    [Header(header: "SensorField")]
+    [SerializeField] 
+    private GameObject SensorRoot;
+    [SerializeField]
+    private Collider2D GroundSensor;
+    [SerializeField]
+    private Collider2D BasicAtkSensor;
+    [SerializeField]
+    private Collider2D BasicAtk2Sensor;
+    [SerializeField]
+    private GameObject visual;
+    [SerializeField]
+    private GameObject ShootCenter;
 
     [Header(header: "Arguments")]
     [SerializeField]
     private float WalkSpeed = 10.0f;
     [SerializeField]
     private float WalkAcceleration = 100.0f;
+    [SerializeField]
+    private float RunSpeed = 15f;
+    [SerializeField]
+    private float MaxRunTime = 1f;
 
     [SerializeField]
     private float JumpSpeed = 25f;
@@ -30,18 +50,57 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField]
     private float MaxGroundBuffer = 0.08f;
 
+    [SerializeField]
+    private float BasicAtkCoolDown = 0.25f;
+
+    [SerializeField]
+    private float FireBallShootSpeed = 25f;
+    [SerializeField]
+    private float ShootCoolDown = 0.25f;
+    [SerializeField]
+    private float ShootCost = 10f;
+
+    [SerializeField]
+    private float hpMax = 100f;
+
+    [SerializeField]
+    private float mpMax = 100f;
+    [SerializeField]
+    private float mpRebornSpeed = 10f;
+    [SerializeField]
+    private float mpRebornDelay = 0.4f;
+    [SerializeField]
+    private float spMax = 100f;
+
+
+    [Header(header: "Visual")]
+    [SerializeField]
+    private float VisualRotSpeed = 25f;
+
     #region Var
-    private Collider2D[] colliderHited = new Collider2D[10];
+    private Collider2D[] colliderHited = new Collider2D[30];
     private float CurrentSpeedH = 0f;
     private float JumpKeyBuffer = 0f;
     private float JumpKeyPress = 0f;
-    private float GroundBuffer = 0f;
+    private float GroundBuffer = 1f;
     private Vector3 lastpos;
+    private float visual_s = 1f;
+    private float visual_st = 1f;
+    private float RunTimer = 0f;
+    private bool CanDoubleJump = false;
+    private bool onGroundLast = false;
+    private float BasicAtkCoolDownTimer = 0f;
+    private float ShootCoolDownTimer = 0f;
+    private float basicAtkDmg = 50f;
+    private float mpRebornTimer = 0f;
+    private ContactFilter2D filter;
     #endregion
 
     void Start()
     {
         lastpos = gameObject.transform.position;
+        filter.useLayerMask = true;
+        BasicAtkSensor.enabled = false;
     }
 
     void Update()
@@ -51,32 +110,61 @@ public class PlayerCtrl : MonoBehaviour
         float AxisH = Input.GetAxisRaw("Horizontal");
         //int AxisV = (int)Input.GetAxisRaw("Vertical");
 
+        if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+        {
+            RunTimer = MaxRunTime;
+        }
+        if(AxisH == 0f)
+        {
+            RunTimer = 0f;
+        }
+
         if (onGround)
         {
-            float targetSpeed = AxisH*WalkSpeed;
+            float targetSpeed = (RunTimer > 0 ? RunSpeed:WalkSpeed)*AxisH;
             if (AxisH == 0f)
             {
                 targetSpeed = 0f;
             }
 
             if (CurrentSpeedH * AxisH < 0) CurrentSpeedH = 0;
-            if (Mathf.Abs(targetSpeed - CurrentSpeedH) < WalkAcceleration * dt)
-            {
-                CurrentSpeedH = targetSpeed;
-            }
-            else
-            {
-                CurrentSpeedH += (targetSpeed - CurrentSpeedH > 0 ? 1f : -1f) * dt * WalkAcceleration;
-            }
+            if (Mathf.Abs(targetSpeed - CurrentSpeedH) < WalkAcceleration * dt) CurrentSpeedH = targetSpeed;
+            else CurrentSpeedH += (targetSpeed - CurrentSpeedH > 0 ? 1f : -1f) * dt * WalkAcceleration;
             physics.setVelocityH(CurrentSpeedH);
-
             GroundBuffer = MaxGroundBuffer;
+
+            CanDoubleJump = false;
         }
+        else
+        {
+            CurrentSpeedH = physics.getVelocity().x;
+            if(onGroundLast == true)
+            {
+                CanDoubleJump = true;
+            }
+        }
+
+        //visual rot
+        if (AxisH != 0) visual_st = AxisH > 0 ? 1f : -1f;
+        Vector3 _s = SensorRoot.transform.localScale;
+        _s.x = visual_st;
+        SensorRoot.transform.localScale = _s;
+        if (Mathf.Abs(visual_st - visual_s) < VisualRotSpeed * dt) visual_s = visual_st;
+        else visual_s += (visual_st - visual_s > 0 ? 1f : -1f) * VisualRotSpeed * dt;
+        _s = visual.transform.localScale;
+        _s.x = Mathf.Sin(Mathf.PI*0.5f*visual_s);
+        visual.transform.localScale = _s;
 
         //Jump Key handle
         if (Input.GetKeyDown(KeyCode.Space))
         {
             JumpKeyBuffer = JumpKeyBuffertime;
+            if (ITag.getBool("hasWing") && CanDoubleJump)
+            {
+                physics.setVelocityH((RunTimer > 0 ? RunSpeed : WalkSpeed) * AxisH);
+                GroundBuffer = MaxGroundBuffer;
+                CanDoubleJump = false;
+            }
         }
         if (Input.GetKey(KeyCode.Space) && JumpKeyBuffer==-1f)
         {
@@ -90,21 +178,65 @@ public class PlayerCtrl : MonoBehaviour
         //Jump
         if (JumpKeyBuffer > 0  && GroundBuffer > 0 && physics.getVelocity().y <= 0.01f)
         {
+            GroundBuffer = 0f;
             JumpKeyBuffer = -1f;
             physics.setVelocityOverrideV(JumpSpeed, JumpSpeedTime);
         }
-
         if(JumpKeyPress > 0 && JumpKeyPress<= JumpKeyPressTime)
         {
             physics.setVelocityOverrideV(JumpSpeed, JumpSpeedTime);
         }
 
+        //attack handler
+        if (Input.GetMouseButton(0))
+        {
+            if (BasicAtkCoolDownTimer <= 0f)
+            {
+                BasicAtk(ITag.getInt("BasicAtk") > 0);
+            }
+        }
+
+        if (Input.GetKey(KeyCode.R))
+        {
+            int wandLevel = ITag.getInt("Wand");
+            if (wandLevel > 0)
+            {
+                if (ShootCoolDownTimer <= 0f)
+                {
+                    float _mp = ITag.getFloat("_magic");
+                    if (_mp >= ShootCost)
+                    {
+                        _mp -= ShootCost;
+                        if (_mp < 0) _mp = 0;
+                        ITag.putFloat("_magic", _mp);
+                        mpRebornTimer = mpRebornDelay;
+                        FireBallAtk(wandLevel > 1);
+                    }
+                }
+            }
+        }
+
+
+
+        if(Input.GetMouseButton(2)) {
+            
+
+            
+        }
+
+
 
         //handle buffer;
         JumpKeyBuffer = Timer.Update(JumpKeyBuffer, dt);
         GroundBuffer = Timer.Update(GroundBuffer, dt);
+        BasicAtkCoolDownTimer = Timer.Update(BasicAtkCoolDownTimer, dt);
+        ShootCoolDownTimer = Timer.Update(ShootCoolDownTimer, dt);
+        mpRebornTimer = Timer.Update(mpRebornTimer, dt);
 
-        float stun = ITag.getFloat("stun");
+        ITag.putBool("RUN", RunTimer > 0);
+
+        RunTimer = Timer.Update(RunTimer, dt);
+        float stun = ITag.getFloat("STUN");
         if (stun <= 0f)
         {
             if(CurrentSpeedH == 0)
@@ -115,18 +247,97 @@ public class PlayerCtrl : MonoBehaviour
             }
         }
         lastpos = gameObject.transform.position;
-        ITag.putFloat("stun", Timer.Update(stun, dt));
-        
+        ITag.putFloat("STUN", Timer.Update(stun, dt));
 
+        float mp = ITag.getFloat("_magic");
+        if (mpRebornTimer <= 0)
+        {
+            mp += mpRebornSpeed * dt;
+            if (mp > mpMax) mp = mpMax;
+            ITag.putFloat("_magic", mp);
+        }
+        healthBar.setMPRate(mp / mpMax);
+        onGroundLast = onGround;
+    }
 
+    private void FireBallAtk(bool isBig)
+    {
+        Vector3 v = Camera.main.ScreenToWorldPoint(Input.mousePosition) - ShootCenter.transform.position;
+        Vector3 p = ShootCenter.transform.position;
+        p.z = 1f;
+        v.z = 0f;
+        if(isBig)
+        {
+            BigFireBallCtrl fbc = Instantiate<GameObject>(bigfireball, p, Quaternion.FromToRotation(Vector3.up, v)).GetComponent<BigFireBallCtrl>();
+            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), 5f);
+        }
+        else
+        {
+            FireBallCtrl fbc = Instantiate<GameObject>(fireball, p, Quaternion.FromToRotation(Vector3.up, v)).GetComponent<FireBallCtrl>();
+            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), 5f);
+        }
+        ShootCoolDownTimer = ShootCoolDown;
+    }
+
+    private void BasicAtk(bool LevelUp)
+    {
+        print("BA");
+        Collider2D ATKS = LevelUp ? BasicAtk2Sensor : BasicAtkSensor;
+        ATKS.enabled = true;
+        Hit.Overlap(ATKS, LayerMask.GetMask("World", "Mob"), colliderHited);
+        Hashtable atked = new Hashtable();
+        foreach (Collider2D c in colliderHited)
+        {
+            if (!(c && !c.isTrigger)) continue;
+            if (atked[c.gameObject] != null) continue;
+            IhasTag TAG = c.gameObject.GetComponent<IhasTag>();
+            if (!TAG) continue;
+            if (TAG.hasVar("float","_health"))
+            {
+                float h = TAG.getFloat("_health");
+                h = h-basicAtkDmg>=0 ? h-basicAtkDmg : 0;
+                TAG.putFloat("_health", h);
+                atked[c.gameObject] = true;
+                //break;
+            }
+        }
+        BasicAtkCoolDownTimer = BasicAtkCoolDown;
+        ATKS.enabled = false;
     }
 
     private bool groundCheck()
     {
-        return GroundSensor.OverlapNonAlloc(LayerMask.GetMask("World"),colliderHited) > 0;
+        return Hit.Overlap(GroundSensor, LayerMask.GetMask("World", "Mob"), colliderHited) > 0;
     }
 
+    private void addSp(float s)
+    {
+        float sp = ITag.getFloat("_soul");
+        sp += s;
+        if (sp > spMax) sp = spMax;
+        ITag.putFloat("_soul", sp);
+    }
 
+    private void addMp(float m)
+    {
+        float mp = ITag.getFloat("_magic");
+        mp += m;
+        if (mp > mpMax) mp = mpMax;
+        ITag.putFloat("_magic", mp);
+    }
+
+    private void SpToMp(float s)
+    {
+        float mp = ITag.getFloat("_magic");
+        float sp = ITag.getFloat("_soul");
+        float rs = s;
+        if (mp+rs > mpMax) rs = mpMax-mp;
+        if (sp - rs < 0) rs = sp;
+        mp -= rs;
+        sp -= rs;
+        ITag.putFloat("_soul", sp);
+        ITag.putFloat("_magic", mp);
+    }
 
     void FixedUpdate()
     {

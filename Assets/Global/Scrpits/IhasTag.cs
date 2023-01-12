@@ -60,6 +60,12 @@ public class IhasTag : MonoBehaviour
         if (v == null) return false;
         return (bool)v;
     }
+
+    public bool hasVar(string type,string key)
+    {
+        return tags[type + ":" + key] != null;
+    }
+
     public override string ToString()
     {
         string str = "";

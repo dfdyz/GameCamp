@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.PlayerLoop;
 
 namespace Assets.Global.Scrpits
@@ -20,5 +21,18 @@ namespace Assets.Global.Scrpits
             return t;
         }
     }
+
+    public static class Hit
+    {
+        private static ContactFilter2D filter;
+
+        public static int Overlap(Collider2D org,int Layer, Collider2D[] results)
+        {
+            filter.useLayerMask = true;
+            filter.layerMask= Layer;
+            return org.OverlapCollider(filter,results);
+        }
+    }
+
 
 }
