@@ -28,6 +28,7 @@ namespace Assets.Global.Scrpits
 
         public static int Overlap(Collider2D org,int Layer, Collider2D[] results)
         {
+            filter.useTriggers = false;
             filter.useLayerMask = true;
             filter.layerMask= Layer;
             return org.OverlapCollider(filter,results);

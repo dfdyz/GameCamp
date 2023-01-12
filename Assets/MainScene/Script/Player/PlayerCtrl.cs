@@ -109,6 +109,7 @@ public class PlayerCtrl : MonoBehaviour
         bool onGround = groundCheck();
         float AxisH = Input.GetAxisRaw("Horizontal");
         //int AxisV = (int)Input.GetAxisRaw("Vertical");
+        float stun = ITag.getFloat("STUN");
 
         if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
         {
@@ -126,11 +127,19 @@ public class PlayerCtrl : MonoBehaviour
             {
                 targetSpeed = 0f;
             }
+            if(stun > 0)
+            {
+                targetSpeed = 0f;
+                CurrentSpeedH = physics.getVelocity().x;
+            }
 
             if (CurrentSpeedH * AxisH < 0) CurrentSpeedH = 0;
             if (Mathf.Abs(targetSpeed - CurrentSpeedH) < WalkAcceleration * dt) CurrentSpeedH = targetSpeed;
             else CurrentSpeedH += (targetSpeed - CurrentSpeedH > 0 ? 1f : -1f) * dt * WalkAcceleration;
-            physics.setVelocityH(CurrentSpeedH);
+            if (stun <= 0)
+            {
+                physics.setVelocityH(CurrentSpeedH);
+            }
             GroundBuffer = MaxGroundBuffer;
 
             CanDoubleJump = false;
@@ -236,7 +245,7 @@ public class PlayerCtrl : MonoBehaviour
         ITag.putBool("RUN", RunTimer > 0);
 
         RunTimer = Timer.Update(RunTimer, dt);
-        float stun = ITag.getFloat("STUN");
+        
         if (stun <= 0f)
         {
             if(CurrentSpeedH == 0)
@@ -247,6 +256,8 @@ public class PlayerCtrl : MonoBehaviour
             }
         }
         lastpos = gameObject.transform.position;
+
+
         ITag.putFloat("STUN", Timer.Update(stun, dt));
 
         float mp = ITag.getFloat("_magic");
@@ -307,7 +318,7 @@ public class PlayerCtrl : MonoBehaviour
 
     private bool groundCheck()
     {
-        return Hit.Overlap(GroundSensor, LayerMask.GetMask("World", "Mob"), colliderHited) > 0;
+        return Hit.Overlap(GroundSensor, LayerMask.GetMask("World"), colliderHited) > 0;
     }
 
     private void addSp(float s)
@@ -337,6 +348,12 @@ public class PlayerCtrl : MonoBehaviour
         sp -= rs;
         ITag.putFloat("_soul", sp);
         ITag.putFloat("_magic", mp);
+    }
+
+    public void TP(Vector3 pos)
+    {
+        lastpos = pos;
+        gameObject.transform.position = lastpos;
     }
 
     void FixedUpdate()

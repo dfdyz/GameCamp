@@ -15,9 +15,9 @@ public class IPhysics : MonoBehaviour
     [SerializeField]
     private AnimationCurve Gravity;
     [SerializeField]
-    private float GravityScale = 9.8f;
+    private float GravityScale = 2f;
     [SerializeField]
-    private float VelocityScale = 10f;
+    private float VelocityScale = 0.78f;
 
     private Functions.FunctionF<float> GravityModifier = (g)=>g;
     private Vector2 VelocityOverrideV = new Vector2(0f,0f);

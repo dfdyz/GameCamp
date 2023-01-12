@@ -18,9 +18,9 @@ TagManager:
   - Mob
   - Item
   - Projectile
-  - 
-  - 
-  - 
+  - S_Mob
+  - WorldLimit
+  - Portal
   - 
   - 
   - 
