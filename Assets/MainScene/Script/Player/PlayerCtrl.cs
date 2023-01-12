@@ -270,6 +270,9 @@ public class PlayerCtrl : MonoBehaviour
             ITag.putFloat("_magic", mp);
         }
         healthBar.setMPRate(mp / mpMax);
+
+        float hp = ITag.getFloat("_health");
+        healthBar.setHPRate(hp / hpMax);
         onGroundLast = onGround;
     }
 

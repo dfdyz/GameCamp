@@ -16,7 +16,7 @@ public class PortalCtrl : MonoBehaviour
     [SerializeField]
     private MaskCtrl mc;
 
-    private Collider2D[] c = new Collider2D[5];
+    private Collider2D[] c = new Collider2D[4];
     private float timer = 0;
     private bool tping = false;
 

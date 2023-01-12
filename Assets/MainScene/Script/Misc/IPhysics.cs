@@ -80,7 +80,8 @@ public class IPhysics : MonoBehaviour
 
     public void setVelocityH(float v)
     {
-        this.v.x = v;
-        rigidbody.velocity = this.v;
+        Vector3 vvv = rigidbody.velocity;
+        vvv.x = v;
+        rigidbody.velocity = vvv;
     }
 }

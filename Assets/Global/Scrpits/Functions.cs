@@ -35,5 +35,18 @@ namespace Assets.Global.Scrpits
         }
     }
 
+    public static class Battle
+    {
+        public static bool Damage(IhasTag tags,float damage)
+        {
+            if(!tags) return false;
+            if (!tags.hasVar("float","_health")) return false;
+            float hp = tags.getFloat("_health");
+            hp -= damage;
+            if(hp < 0) hp = 0;
+            tags.putFloat("_health",hp);
+            return true;
+        }
+    }
 
 }
