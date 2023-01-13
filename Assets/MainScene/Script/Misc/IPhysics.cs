@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[AddComponentMenu("Utils/IPhysics")]
 public class IPhysics : MonoBehaviour
 {
     [Header(header: "Physics Instance")]

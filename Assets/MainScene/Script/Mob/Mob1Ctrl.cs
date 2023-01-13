@@ -30,6 +30,8 @@ public class Mob1Ctrl : MonoBehaviour
     [SerializeField]
     private float AttackDamage = 10f;
     [SerializeField]
+    private float AttackPreDelay = 0.2f; //¹¥»÷Ç°Ò¡
+    [SerializeField]
     private float DashSpeed = 25f;
     [SerializeField]
     private float DashTime = 0.225f;
@@ -43,6 +45,7 @@ public class Mob1Ctrl : MonoBehaviour
     private bool attacking = false;
     private Vector3 lastpos;
     private float velocityH = 0f;
+    private bool preDelaying = false;
     private float attackCoolDownTimer = 0f;
     private ContactFilter2D filter;
     private bool FaceRight = true;
@@ -82,7 +85,7 @@ public class Mob1Ctrl : MonoBehaviour
                 physics.setVelocityH(0);
                 targetX = gameObject.transform.position.x;
             }
-            ScanTimer = 0.3f;
+            ScanTimer = 0.1f;
         }
 
         if (hasTarget && attackCoolDownTimer <= 0f && Hit.Overlap(AttackSensor, LayerMask.GetMask("Player"), c) > 0 && !attacking)
@@ -99,13 +102,17 @@ public class Mob1Ctrl : MonoBehaviour
         }
         else if (attacking)
         {
-            physics.setVelocityH(DashSpeed * (FaceRight ? 1f : -1f));
-            if (AttackField.Cast(physics.getVelocity(), filter, rch, -Vector2.Distance(pos, lastpos)) > 0)
+            if(preDelaying) physics.setVelocityH(0);
+            else
             {
-                if(atked[rch[0].collider.gameObject] == null)
+                physics.setVelocityH(DashSpeed * (FaceRight ? 1f : -1f));
+                if (AttackField.Cast(physics.getVelocity(), filter, rch, -Vector2.Distance(pos, lastpos)) > 0)
                 {
-                    if(Battle.Damage(rch[0].collider.gameObject.GetComponent<IhasTag>(), AttackDamage))
-                        atked[rch[0].collider.gameObject] = true;
+                    if (atked[rch[0].collider.gameObject] == null)
+                    {
+                        if (Battle.Damage(rch[0].collider.gameObject.GetComponent<IhasTag>(), AttackDamage))
+                            atked[rch[0].collider.gameObject] = true;
+                    }
                 }
             }
         }
@@ -139,12 +146,15 @@ public class Mob1Ctrl : MonoBehaviour
     }
 
     IEnumerator ATK()
-    { 
+    {
+        preDelaying = true;
         AttackField.enabled = true;
         AttackSensor.enabled = false;
         atked.Clear();
         attacking = true;
-        attackCoolDownTimer = DashTime+AttackCoolDown;
+        attackCoolDownTimer = AttackPreDelay + DashTime + AttackCoolDown;
+        yield return new WaitForSeconds(AttackPreDelay);
+        preDelaying = false;
         yield return new WaitForSeconds(DashTime);
         AttackField.enabled = false;
         AttackSensor.enabled = true;

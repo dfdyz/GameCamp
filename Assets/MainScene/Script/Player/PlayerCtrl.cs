@@ -16,7 +16,7 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField]
     private GameObject bigfireball;
     [SerializeField]
-    private CinemachineBrain cam;
+    private CinemachineVirtualCamera cam;
     [Header(header: "SensorField")]
     [SerializeField] 
     private GameObject SensorRoot;
@@ -74,7 +74,6 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField]
     private float spMax = 100f;
 
-
     [Header(header: "Visual")]
     [SerializeField]
     private float VisualRotSpeed = 25f;
@@ -96,6 +95,7 @@ public class PlayerCtrl : MonoBehaviour
     private float basicAtkDmg = 50f;
     private float mpRebornTimer = 0f;
     private ContactFilter2D filter;
+
     #endregion
 
     void Start()
@@ -113,10 +113,11 @@ public class PlayerCtrl : MonoBehaviour
         //int AxisV = (int)Input.GetAxisRaw("Vertical");
         float stun = ITag.getFloat("STUN");
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+        if ((Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift)) && RunTimer <= 0f)
         {
             RunTimer = MaxRunTime;
         }
+
         if(AxisH == 0f)
         {
             RunTimer = 0f;
@@ -284,12 +285,12 @@ public class PlayerCtrl : MonoBehaviour
         v.z = 0f;
         if(isBig)
         {
-            BigFireBallCtrl fbc = Instantiate<GameObject>(bigfireball, p, Quaternion.FromToRotation(Vector3.up, v)).GetComponent<BigFireBallCtrl>();
+            ExplodeProjectileCtrl fbc = Instantiate<GameObject>(bigfireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ExplodeProjectileCtrl>();
             fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), 5f);
         }
         else
         {
-            FireBallCtrl fbc = Instantiate<GameObject>(fireball, p, Quaternion.FromToRotation(Vector3.up, v)).GetComponent<FireBallCtrl>();
+            ProjectileCtrl fbc = Instantiate<GameObject>(fireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
             fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), 5f);
         }
         ShootCoolDownTimer = ShootCoolDown;
