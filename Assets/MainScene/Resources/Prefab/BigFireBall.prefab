@@ -167,8 +167,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 7222001611982970748}
-  hitfield: {fileID: 6960499005654086618}
   expfield: {fileID: 8574552575932160327}
+  hitfield: {fileID: 6960499005654086618}
+  damage: 50
 --- !u!1 &7222001612766381827
 GameObject:
   m_ObjectHideFlags: 0
@@ -208,7 +209,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7222001612766381827}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1

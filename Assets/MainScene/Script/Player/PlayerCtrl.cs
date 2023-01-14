@@ -18,7 +18,7 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField]
     private CinemachineVirtualCamera cam;
     [Header(header: "SensorField")]
-    [SerializeField] 
+    [SerializeField]
     private GameObject SensorRoot;
     [SerializeField]
     private Collider2D GroundSensor;
@@ -54,7 +54,8 @@ public class PlayerCtrl : MonoBehaviour
 
     [SerializeField]
     private float BasicAtkCoolDown = 0.25f;
-
+    [SerializeField]
+    private float ShootDamage = 10f;
     [SerializeField]
     private float FireBallShootSpeed = 25f;
     [SerializeField]
@@ -100,6 +101,7 @@ public class PlayerCtrl : MonoBehaviour
 
     void Start()
     {
+        Random.InitState(114514);
         lastpos = gameObject.transform.position;
         filter.useLayerMask = true;
         BasicAtkSensor.enabled = false;
@@ -286,12 +288,12 @@ public class PlayerCtrl : MonoBehaviour
         if(isBig)
         {
             ExplodeProjectileCtrl fbc = Instantiate<GameObject>(bigfireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ExplodeProjectileCtrl>();
-            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), 5f);
+            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), ShootDamage,5f);
         }
         else
         {
             ProjectileCtrl fbc = Instantiate<GameObject>(fireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
-            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), 5f);
+            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), ShootDamage*1.2f, 5f);
         }
         ShootCoolDownTimer = ShootCoolDown;
     }

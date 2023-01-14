@@ -7,20 +7,23 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 public class ProjectileCtrl : MonoBehaviour
 {
     [SerializeField]
-    private Rigidbody2D rb;
+    protected Rigidbody2D rb;
     [SerializeField]
-    private Collider2D collider;
+    protected Collider2D collider;
+    [SerializeField]
+    protected float damage = 10f;
 
     private int Layer;
     //private Collider2D[] colliders = new Collider2D[10];
     private RaycastHit2D[] rchs = new RaycastHit2D[20];
     private ContactFilter2D filter;
     private float lifetime = -100f;
-    private Functions.FunctionF<GameObject> damageSource = (obj) => 10;
+    private Functions.FunctionF<GameObject> damageSource = (obj) => 0;
     private Vector3 lastpos;
 
     private void Awake()
     {
+        damageSource = (obj) => damage;
         filter.useLayerMask=true;
         Layer = LayerMask.GetMask("World");
     }
@@ -55,9 +58,17 @@ public class ProjectileCtrl : MonoBehaviour
         lifetime = Timer.Update(lifetime,Time.deltaTime);
         lastpos = gameObject.transform.position;
     }
-    public void Shoot(Vector3 velocity,int layer,float lifetime)
+    public void Shoot(Vector3 velocity, int layer, float damage, float lifetime)
     {
-        this.lifetime = lifetime;    
+        this.lifetime = lifetime;
+        this.damage = damage;
+        Layer = layer;
+        Shoot(velocity);
+    }
+
+    public void Shoot(Vector3 velocity, int layer, float lifetime)
+    {
+        this.lifetime = lifetime;
         Layer = layer;
         Shoot(velocity);
     }
@@ -68,7 +79,7 @@ public class ProjectileCtrl : MonoBehaviour
         lastpos = gameObject.transform.position;
     }
 
-    private bool HitCheck()
+    protected bool HitCheck()
     {
         filter.layerMask = Layer;
         return collider.Cast(rb.velocity, filter, rchs,-Vector2.Distance(lastpos,gameObject.transform.position)) > 0;

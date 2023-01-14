@@ -106,6 +106,49 @@ public class IhasTag : MonoBehaviour
         }
     }
 
+    public string Serialize()
+    {
+        string str = "";
+        foreach (object o in tags.Keys)
+        {
+            if (o.GetType() == typeof(string))
+            {
+                string[] v = o.ToString().Split(':');
+                str += v[0] + ':' + v[1] + ':' + tags[o].ToString() + "\n";
+            }
+        }
+        return str;
+    }
+
+    public void Unserialize(string strs)
+    {
+        string[] s = strs.Split('\n');
+        foreach (string str in Initializations)
+        {
+            if (str.Length > 0 && str != "")
+            {
+                string[] args = str.Split(':', ' ');
+                switch (args[0])
+                {
+
+                    case "int":
+                        putInt(args[1], Convert.ToInt32(args[2]));
+                        break;
+                    case "float":
+                        putFloat(args[1], (float)Convert.ToDouble(args[2]));
+                        break;
+                    case "string":
+                        putString(args[1], args[2]);
+                        break;
+                    case "bool":
+                        putBool(args[1], args[2] == "true" ? true : false);
+                        break;
+                }
+            }
+        }
+    }
+
+
     void Awake()
     {
         Interpret();

@@ -26,7 +26,7 @@ public class SoulBarCtrl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float R = RollingSpeed*Time.deltaTime;
+        float R = RollingSpeed*Time.unscaledDeltaTime;
         if(Mathf.Abs(SPRate-realRate) > R)
         {
             realRate += (SPRate - realRate > 0 ? 1f : -1f) * R;

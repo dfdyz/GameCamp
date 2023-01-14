@@ -16,18 +16,22 @@ public class CamCtrl : MonoBehaviour
     [SerializeField]
     private float fov_speed = 16.0f;
 
+    private float mul = 1f;
+
     void Update()
     {
         float dt = Time.deltaTime;
-        if (PLAYERTAG.getBool("RUN"))
-        {
-            if(run_fov - cam.m_Lens.OrthographicSize > fov_speed * dt) cam.m_Lens.OrthographicSize += fov_speed * dt;
-            else cam.m_Lens.OrthographicSize = run_fov;
-        }
-        else
-        {
-            if (cam.m_Lens.OrthographicSize-walk_fov > fov_speed * dt) cam.m_Lens.OrthographicSize -= fov_speed * dt;
-            else cam.m_Lens.OrthographicSize = walk_fov;
-        }
+        float target = (PLAYERTAG.getBool("RUN") ? run_fov : walk_fov) * mul;
+
+        if (Mathf.Abs(target * mul - cam.m_Lens.OrthographicSize) > fov_speed * dt) cam.m_Lens.OrthographicSize += (target * mul - cam.m_Lens.OrthographicSize > 0 ? 1:-1) * fov_speed * dt;
+        else cam.m_Lens.OrthographicSize = target * mul;
+
     }
+
+    public void setMul(float mul)
+    {
+        this.mul = mul;
+    }
+
+
 }

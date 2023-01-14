@@ -27,7 +27,7 @@ public class HealthBarCtrl : MonoBehaviour
 
     void Update()
     {
-        float dt = Time.deltaTime;
+        float dt = Time.unscaledDeltaTime;
         Vector3 v = hp_top.transform.localScale;
         v.x = HpRate;
         hp_top.transform.localScale = v;
@@ -79,6 +79,10 @@ public class HealthBarCtrl : MonoBehaviour
             MpRollingTimer = RollingDelay;
         }
         MpRate = Mathf.Clamp(r, 0f,1f);
+    }
+    public float getHPRate()
+    {
+        return HpRate;
     }
 
 }
