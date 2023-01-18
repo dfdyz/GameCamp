@@ -9,6 +9,8 @@ public class Mob3Ctrl : MonoBehaviour
     [Header("Instance")]
     [SerializeField]
     private IhasTag ITag;
+    [SerializeField]
+    private KillMgrCtrl killMgr;
 
     [Header("Sensor")]
     [SerializeField]
@@ -66,11 +68,12 @@ public class Mob3Ctrl : MonoBehaviour
                 Atk(rch3.collider.gameObject.transform.position);
             }
 
-            ScanTimer = 0.1f;
+            ScanTimer = 0.2f;
         }
 
         if (gameObject.GetComponent<IhasTag>().getFloat("_health") <= 0)
         {
+            killMgr.AddKill("Kill_Mob3");
             GameObject.Destroy(gameObject, 0f);
         }
 
@@ -86,7 +89,7 @@ public class Mob3Ctrl : MonoBehaviour
         Vector3 v = target - p;
         p.z = 1f;
         v.z = 0f;
-        ProjectileCtrl fbc = Instantiate<GameObject>(ProjectileObj, p, Quaternion.FromToRotation(Vector3.right, target)).GetComponent<ProjectileCtrl>();
+        ProjectileCtrl fbc = Instantiate<GameObject>(ProjectileObj, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
         fbc.Shoot(v.normalized * ProjectileSpeed, LayerMask.GetMask("World", "Player"), AttackDamage,5f);
 
         attackCoolDownTimer = AttackCoolDown;

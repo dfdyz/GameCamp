@@ -10,7 +10,9 @@ namespace Assets.Global.Scrpits
 {
     public class Functions
     {
-        public delegate float FunctionF<A>(A arg);
+        public delegate R Function<A,out R>(A arg);
+        public delegate R Function2<A,B,out R>(A arg1,B arg2);
+        public delegate float Function3<A, B, C>(A arg1, B arg2, C arg3);
     }
     public static class Timer
     {

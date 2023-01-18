@@ -1,7 +1,9 @@
+using Assets.Global.Scrpits;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Assets.Global.Scrpits.Functions;
 
 /// <summary>
 /// 标签系统，用于储存数据
@@ -20,21 +22,24 @@ public class IhasTag : MonoBehaviour
     private string[] Initializations;
 
     private Hashtable tags = new Hashtable();
+
+    public Function2<string, object, object> onChangeEvent = (k,v) => v;
     public void putInt(string key, int value)
     {
-        tags["int:" + key] = value;
+        tags["int:" + key] = (int)onChangeEvent("int:" + key, value);
     }
     public void putFloat(string key, float value)
     {
-        tags["float:" + key] = value;
+
+        tags["float:" + key] = (float)onChangeEvent("float:" + key, value);
     }
     public void putString(string key, string value)
     {
-        tags["string:" + key] = value;
+        tags["string:" + key] = (string)onChangeEvent("string:" + key, value);
     }
     public void putBool(string key, bool value)
     {
-        tags["bool:" + key] = value;
+        tags["bool:" + key] = (bool)onChangeEvent("bool:" + key, value);
     }
     public int getInt(string key)
     {
@@ -123,14 +128,13 @@ public class IhasTag : MonoBehaviour
     public void Unserialize(string strs)
     {
         string[] s = strs.Split('\n');
-        foreach (string str in Initializations)
+        foreach (string str in s)
         {
             if (str.Length > 0 && str != "")
             {
                 string[] args = str.Split(':', ' ');
                 switch (args[0])
                 {
-
                     case "int":
                         putInt(args[1], Convert.ToInt32(args[2]));
                         break;
@@ -147,7 +151,6 @@ public class IhasTag : MonoBehaviour
             }
         }
     }
-
 
     void Awake()
     {

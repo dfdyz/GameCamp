@@ -11,7 +11,10 @@ public class Mob1Ctrl : MonoBehaviour
     private IhasTag ITag;
     [SerializeField]
     private IPhysics physics;
-
+    [SerializeField]
+    private KillMgrCtrl killMgr;
+    [SerializeField]
+    private Animator animator;
     [Header("Sensor")]
     [SerializeField]
     private GameObject SensorRoot;
@@ -51,6 +54,7 @@ public class Mob1Ctrl : MonoBehaviour
     private bool FaceRight = true;
     private Vector3 scl;
     private Hashtable atked = new Hashtable();
+    private bool die = false;
 
     // Start is called before the first frame update
     void Start()
@@ -66,6 +70,7 @@ public class Mob1Ctrl : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        if (die) return;
         float dt = Time.deltaTime;
         float stun = ITag.getFloat("STUN");
         Vector3 pos = gameObject.transform.position;
@@ -85,7 +90,7 @@ public class Mob1Ctrl : MonoBehaviour
                 physics.setVelocityH(0);
                 targetX = gameObject.transform.position.x;
             }
-            ScanTimer = 0.1f;
+            ScanTimer = 0.2f;
         }
 
         if (hasTarget && attackCoolDownTimer <= 0f && Hit.Overlap(AttackSensor, LayerMask.GetMask("Player"), c) > 0 && !attacking)
@@ -135,9 +140,12 @@ public class Mob1Ctrl : MonoBehaviour
 
         if (gameObject.GetComponent<IhasTag>().getFloat("_health") <= 0)
         {
-            GameObject.Destroy(gameObject, 0f);
+            killMgr.AddKill("Kill_Mob1");
+            StartCoroutine(DIE());
         }
 
+        animator.SetBool("walk", Mathf.Abs(physics.getVelocity().x) >= 0.05f);
+        
         attackCoolDownTimer = Timer.Update(attackCoolDownTimer, dt);
         ScanTimer = Timer.Update(ScanTimer, dt);
 
@@ -162,6 +170,12 @@ public class Mob1Ctrl : MonoBehaviour
         attackCoolDownTimer = AttackCoolDown;
     }
 
-
+    IEnumerator DIE()
+    {
+        die = true;
+        animator.SetBool("die", true);
+        yield return new WaitForSeconds(0.4f);
+        GameObject.Destroy(gameObject, 0f);
+    }
 
 }

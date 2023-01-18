@@ -1,0 +1,15 @@
+bool:RUN:False
+float:_magic:200
+float:_soul:7
+int:Wand:1
+float:_health:190
+bool:EnableSave:True
+float:STUN:-0.137066
+bool:hasItem_魔法棒:False
+bool:hasItem_玩具翅膀:False
+int:Kill_Mob1:2
+int:Kill_Mob2:0
+int:Kill_Mob3:0
+int:Kill_Mob4:0
+bool:Bear:True
+bool:BasicAtkLevelUp:True

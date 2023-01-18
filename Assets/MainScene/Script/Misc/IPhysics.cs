@@ -20,7 +20,7 @@ public class IPhysics : MonoBehaviour
     [SerializeField]
     private float VelocityScale = 0.78f;
 
-    private Functions.FunctionF<float> GravityModifier = (g)=>g;
+    private Functions.Function<float,float> GravityModifier = (g)=>g;
     private Vector2 VelocityOverrideV = new Vector2(0f,0f);
     private Vector2 v;
 
@@ -58,7 +58,7 @@ public class IPhysics : MonoBehaviour
         return Gravity.Evaluate(rigidbody.velocity.y * VelocityScale) * GravityScale;
     }
 
-    public void setGravityModifier(Functions.FunctionF<float> function)
+    public void setGravityModifier(Functions.Function<float,float> function)
     {
         GravityModifier = function;
     }

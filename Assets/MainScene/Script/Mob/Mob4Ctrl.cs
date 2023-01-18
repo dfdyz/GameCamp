@@ -10,6 +10,10 @@ public class Mob4Ctrl : MonoBehaviour
     private IhasTag ITag;
     [SerializeField]
     private Rigidbody2D rb;
+    [SerializeField]
+    private KillMgrCtrl killMgr;
+    [SerializeField]
+    private Animator animator;
 
     [Header("Sensor")]
     [SerializeField]
@@ -71,7 +75,7 @@ public class Mob4Ctrl : MonoBehaviour
                 vel.x = 0;
                 hasTarget = false;
             }
-            ScanTimer = 0.1f;
+            ScanTimer = 0.2f;
         }
 
         if(hasTarget)
@@ -111,6 +115,7 @@ public class Mob4Ctrl : MonoBehaviour
 
         if (gameObject.GetComponent<IhasTag>().getFloat("_health") <= 0)
         {
+            killMgr.AddKill("Kill_Mob4");
             GameObject.Destroy(gameObject, 0f);
         }
 

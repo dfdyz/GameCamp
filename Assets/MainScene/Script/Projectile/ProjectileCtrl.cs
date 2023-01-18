@@ -2,24 +2,23 @@ using Assets.Global.Scrpits;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class ProjectileCtrl : MonoBehaviour
 {
     [SerializeField]
     protected Rigidbody2D rb;
     [SerializeField]
-    protected Collider2D collider;
+    protected Collider2D hit;
     [SerializeField]
     protected float damage = 10f;
 
-    private int Layer;
+    protected int Layer;
     //private Collider2D[] colliders = new Collider2D[10];
-    private RaycastHit2D[] rchs = new RaycastHit2D[20];
-    private ContactFilter2D filter;
-    private float lifetime = -100f;
-    private Functions.FunctionF<GameObject> damageSource = (obj) => 0;
-    private Vector3 lastpos;
+    protected RaycastHit2D[] rchs = new RaycastHit2D[20];
+    protected ContactFilter2D filter;
+    protected float lifetime = -100f;
+    protected Functions.Function<GameObject,float> damageSource = (obj) => 0;
+    protected Vector3 lastpos;
 
     private void Awake()
     {
@@ -33,11 +32,11 @@ public class ProjectileCtrl : MonoBehaviour
         lastpos = gameObject.transform.position;
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         if (HitCheck() || (lifetime <= 0f && lifetime != -100f))
         {
-            foreach(RaycastHit2D rch in rchs)
+            foreach (RaycastHit2D rch in rchs)
             {
                 if (!(rch && !rch.collider.isTrigger)) continue;
                 IhasTag tag = rch.collider.gameObject.GetComponent<IhasTag>();
@@ -53,9 +52,9 @@ public class ProjectileCtrl : MonoBehaviour
                     }
                 }
             }
-            GameObject.Destroy(gameObject,0f);
+            GameObject.Destroy(gameObject, 0f);
         }
-        lifetime = Timer.Update(lifetime,Time.deltaTime);
+        lifetime = Timer.Update(lifetime, Time.deltaTime);
         lastpos = gameObject.transform.position;
     }
     public void Shoot(Vector3 velocity, int layer, float damage, float lifetime)
@@ -82,6 +81,6 @@ public class ProjectileCtrl : MonoBehaviour
     protected bool HitCheck()
     {
         filter.layerMask = Layer;
-        return collider.Cast(rb.velocity, filter, rchs,-Vector2.Distance(lastpos,gameObject.transform.position)) > 0;
+        return hit.Cast(rb.velocity, filter, rchs,-Vector2.Distance(lastpos,gameObject.transform.position)) > 0;
     }
 }

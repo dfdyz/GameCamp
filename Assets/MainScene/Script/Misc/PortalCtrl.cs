@@ -15,7 +15,8 @@ public class PortalCtrl : MonoBehaviour
     private GameObject TargetPos;
     [SerializeField]
     private MaskCtrl mc;
-
+    [SerializeField]
+    private GameObject field;
     private Collider2D[] c = new Collider2D[4];
     private float timer = 0;
     private bool tping = false;
@@ -46,6 +47,7 @@ public class PortalCtrl : MonoBehaviour
     {
         tping = true;
         mc.setTrans(true, 0.3f);
+        ResetMob();
         yield return new WaitForSeconds(0.3f);
         p.GetComponent<PlayerCtrl>().TP(TargetPos.transform.position);
         yield return new WaitForSeconds(0.5f);
@@ -53,4 +55,23 @@ public class PortalCtrl : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         tping = false;
     }
+
+    private void ResetMob()
+    {
+        if (!field) return;
+        GameObject[] obj = GameObject.FindGameObjectsWithTag("field_entity");
+
+        GameObject fieldInstance = null;
+        foreach (GameObject o in obj)
+        {
+            if (o.name == field.name) { fieldInstance = o; break; }
+        }
+        if (!fieldInstance) return;
+        GameObject.Destroy(fieldInstance);
+        fieldInstance = GameObject.Instantiate<GameObject>(field, Vector3.zero, Quaternion.identity);
+        fieldInstance.name = field.name;
+        fieldInstance.tag = "field_entity";
+        fieldInstance.SetActive(true);
+    }
+
 }

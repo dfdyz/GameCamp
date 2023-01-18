@@ -12,9 +12,17 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField]
     private HealthBarCtrl healthBar;
     [SerializeField]
+    private SoulBarCtrl soulBar;
+    [SerializeField]
     private GameObject fireball;
     [SerializeField]
     private GameObject bigfireball;
+    [SerializeField]
+    private Animator animator;
+    [SerializeField]
+    private GameObject RebornPoint;
+    [SerializeField]
+    private MaskCtrl maskCtrl;
     [SerializeField]
     private CinemachineVirtualCamera cam;
     [Header(header: "SensorField")]
@@ -55,6 +63,8 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField]
     private float BasicAtkCoolDown = 0.25f;
     [SerializeField]
+    private float BasicAtkDamage = 40f;
+    [SerializeField]
     private float ShootDamage = 10f;
     [SerializeField]
     private float FireBallShootSpeed = 25f;
@@ -64,20 +74,19 @@ public class PlayerCtrl : MonoBehaviour
     private float ShootCost = 10f;
 
     [SerializeField]
-    private float hpMax = 100f;
-
+    private float hpMaxBase = 100f;
     [SerializeField]
-    private float mpMax = 100f;
+    private float mpMaxBase = 100f;
     [SerializeField]
     private float mpRebornSpeed = 10f;
     [SerializeField]
     private float mpRebornDelay = 0.4f;
-    [SerializeField]
-    private float spMax = 100f;
+    public float spMax = 100f;
 
     [Header(header: "Visual")]
     [SerializeField]
     private float VisualRotSpeed = 25f;
+
 
     #region Var
     private Collider2D[] colliderHited = new Collider2D[30];
@@ -96,7 +105,11 @@ public class PlayerCtrl : MonoBehaviour
     private float basicAtkDmg = 50f;
     private float mpRebornTimer = 0f;
     private ContactFilter2D filter;
-
+    private float hpMax = 100f;
+    private float mpMax = 100f;
+    private bool reborning = false;
+    private bool attacking = false;
+    private bool MagicMode = false;
     #endregion
 
     void Start()
@@ -109,6 +122,20 @@ public class PlayerCtrl : MonoBehaviour
 
     void Update()
     {
+        if (ITag.getBool("hasItem_¶ùÍ¯»æ±¾"))
+        {
+            hpMax = hpMaxBase + hpMaxBase * (ITag.getInt("Kill_Mob1") % 5 * 0.015f);
+            mpMax = mpMaxBase + mpMaxBase * (ITag.getInt("Kill_Mob4") % 5 * 0.015f);
+        }
+        else
+        {
+            hpMax = hpMaxBase;
+            mpMax = mpMaxBase;
+        }
+        basicAtkDmg = BasicAtkDamage + BasicAtkDamage * (ITag.getInt("Kill_Mob2") % 5 * 0.01f);
+
+        if (reborning) return;
+
         float dt = Time.deltaTime;
         bool onGround = groundCheck();
         float AxisH = Input.GetAxisRaw("Horizontal");
@@ -135,6 +162,7 @@ public class PlayerCtrl : MonoBehaviour
             if(stun > 0)
             {
                 targetSpeed = 0f;
+                animator.SetBool("walk", false);
                 CurrentSpeedH = physics.getVelocity().x;
             }
 
@@ -143,6 +171,8 @@ public class PlayerCtrl : MonoBehaviour
             else CurrentSpeedH += (targetSpeed - CurrentSpeedH > 0 ? 1f : -1f) * dt * WalkAcceleration;
             if (stun <= 0)
             {
+                if(Mathf.Abs(CurrentSpeedH) >= 0.5f) animator.SetBool("walk", true);
+                else animator.SetBool("walk", false);
                 physics.setVelocityH(CurrentSpeedH);
             }
             GroundBuffer = MaxGroundBuffer;
@@ -156,6 +186,7 @@ public class PlayerCtrl : MonoBehaviour
             {
                 CanDoubleJump = true;
             }
+            animator.SetBool("walk", false);
         }
 
         //visual rot
@@ -173,7 +204,7 @@ public class PlayerCtrl : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             JumpKeyBuffer = JumpKeyBuffertime;
-            if (ITag.getBool("hasWing") && CanDoubleJump)
+            if (ITag.getBool("hasItem_Íæ¾ß³á°ò") && CanDoubleJump)
             {
                 physics.setVelocityH((RunTimer > 0 ? RunSpeed : WalkSpeed) * AxisH);
                 GroundBuffer = MaxGroundBuffer;
@@ -190,30 +221,49 @@ public class PlayerCtrl : MonoBehaviour
         }
 
         //Jump
-        if (JumpKeyBuffer > 0  && GroundBuffer > 0 && physics.getVelocity().y <= 0.01f)
+        if (JumpKeyBuffer > 0  && GroundBuffer > 0 && physics.getVelocity().y <= 5f)
         {
             GroundBuffer = 0f;
             JumpKeyBuffer = -1f;
+            if (!attacking)
+            {
+                animator.Play("jump_p");
+            }
             physics.setVelocityOverrideV(JumpSpeed, JumpSpeedTime);
         }
         if(JumpKeyPress > 0 && JumpKeyPress<= JumpKeyPressTime)
         {
+            
             physics.setVelocityOverrideV(JumpSpeed, JumpSpeedTime);
         }
+
+        //fall anim
+        if(physics.getVelocity().y <= -0.05f)
+        {
+            animator.SetBool("fall",true);
+        }
+        else
+        {
+            animator.SetBool("fall",false);
+        }
+
+        if(!onGroundLast && onGround)
+        {
+            animator.SetBool("jump", false);
+        }
+
 
         //attack handler
         if (Input.GetMouseButton(0))
         {
-            if (BasicAtkCoolDownTimer <= 0f)
+            if (!MagicMode)
             {
-                BasicAtk(ITag.getInt("BasicAtk") > 0);
+                if (BasicAtkCoolDownTimer <= 0f && !attacking)
+                {
+                    StartCoroutine(BasicAtk(ITag.getBool("BasicAtkLevelUp")));
+                }
             }
-        }
-
-        if (Input.GetKey(KeyCode.R))
-        {
-            int wandLevel = ITag.getInt("Wand");
-            if (wandLevel > 0)
+            else
             {
                 if (ShootCoolDownTimer <= 0f)
                 {
@@ -224,21 +274,26 @@ public class PlayerCtrl : MonoBehaviour
                         if (_mp < 0) _mp = 0;
                         ITag.putFloat("_magic", _mp);
                         mpRebornTimer = mpRebornDelay;
-                        FireBallAtk(wandLevel > 1);
+                        FireBallAtk(false);
                     }
                 }
             }
         }
 
-
-
-        if(Input.GetMouseButton(2)) {
-            
-
-            
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (ITag.getBool("hasItem_Ä§·¨°ô") && !attacking)
+            {
+                if (!attacking) MagicMode = !MagicMode;
+            }
         }
 
+        animator.SetBool("magic", MagicMode);
 
+        if (Input.GetKeyDown(KeyCode.E) && ITag.getBool("Bear") && ITag.getFloat("_soul") >= spMax) {
+            ITag.putFloat("_health", Mathf.Clamp(ITag.getFloat("_health")+hpMax*0.3f,0,hpMax));
+            ITag.putFloat("_soul", 0);
+        }
 
         //handle buffer;
         JumpKeyBuffer = Timer.Update(JumpKeyBuffer, dt);
@@ -277,6 +332,15 @@ public class PlayerCtrl : MonoBehaviour
         float hp = ITag.getFloat("_health");
         healthBar.setHPRate(hp / hpMax);
         onGroundLast = onGround;
+
+        animator.SetBool("onGround", onGround);
+
+        soulBar.setSPRate(ITag.getFloat("_soul")/spMax);
+
+        if (hp <= 0f)
+        {
+            StartCoroutine(Reborn());
+        }
     }
 
     private void FireBallAtk(bool isBig)
@@ -285,24 +349,20 @@ public class PlayerCtrl : MonoBehaviour
         Vector3 p = ShootCenter.transform.position;
         p.z = 1f;
         v.z = 0f;
-        if(isBig)
-        {
-            ExplodeProjectileCtrl fbc = Instantiate<GameObject>(bigfireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ExplodeProjectileCtrl>();
-            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), ShootDamage,5f);
-        }
-        else
-        {
-            ProjectileCtrl fbc = Instantiate<GameObject>(fireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
-            fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), ShootDamage*1.2f, 5f);
-        }
+        ProjectileCtrl fbc;
+        if (isBig) fbc = Instantiate<GameObject>(bigfireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
+        else fbc = Instantiate<GameObject>(fireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
+        fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), ShootDamage * (isBig ? 1.2f:1f), 5f);
         ShootCoolDownTimer = ShootCoolDown;
     }
 
-    private void BasicAtk(bool LevelUp)
+    IEnumerator BasicAtk(bool LevelUp)
     {
-        print("BA");
+        attacking = true;
         Collider2D ATKS = LevelUp ? BasicAtk2Sensor : BasicAtkSensor;
         ATKS.enabled = true;
+        animator.Play("ATKP");
+        yield return new WaitForSeconds(0.2f);
         Hit.Overlap(ATKS, LayerMask.GetMask("World", "Mob"), colliderHited);
         Hashtable atked = new Hashtable();
         foreach (Collider2D c in colliderHited)
@@ -320,8 +380,10 @@ public class PlayerCtrl : MonoBehaviour
                 //break;
             }
         }
-        BasicAtkCoolDownTimer = BasicAtkCoolDown;
         ATKS.enabled = false;
+        yield return new WaitForSeconds(0.1f);
+        attacking = false;
+        BasicAtkCoolDownTimer = BasicAtkCoolDown;
     }
 
     private bool groundCheck()
@@ -364,8 +426,28 @@ public class PlayerCtrl : MonoBehaviour
         gameObject.transform.position = lastpos;
     }
 
-    void FixedUpdate()
+
+    IEnumerator Reborn()
     {
-        
+        reborning = true;
+        maskCtrl.setTrans(true, 1f);
+        yield return new WaitForSeconds(1f);
+        TP(RebornPoint.transform.position);
+
+        hpMax = hpMaxBase + hpMaxBase * (ITag.getInt("Kill_Mob1") % 5 * 0.015f);
+        mpMax = mpMaxBase + mpMaxBase * (ITag.getInt("Kill_Mob4") % 5 * 0.015f);
+
+        ITag.putFloat("_health", hpMax);
+        ITag.putFloat("_magic", mpMax);
+        healthBar.setHPRate(1);
+        soulBar.setSPRate(1);
+
+        CurrentSpeedH = 0;
+        physics.setVelocityH(0);
+
+        yield return new WaitForSeconds(1f);
+        maskCtrl.setTrans(false, 0.2f);
+        yield return new WaitForSeconds(0.5f);
+        reborning = false;
     }
 }

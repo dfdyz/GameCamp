@@ -65,7 +65,6 @@ public class BossCtrl : MonoBehaviour
     private float attackCoolDownTimer = 0f;
     private int lm;
     private Vector3 atkfpos;
-    private float hpLock = 0f;
     private float atkTimer = 0f;
     private float atkPrevTime = 0f;
     private float atkPrevDelayTimer = 0f;
@@ -100,7 +99,16 @@ public class BossCtrl : MonoBehaviour
         filter.useTriggers = false;
         atkfpos = AtkField.gameObject.transform.localPosition;
         AtkField.gameObject.SetActive(false);
-        hpLock = ITag.getFloat("_health");
+        ITag.onChangeEvent = (k, v) =>
+        {
+            if (k == "float:_health" && state != BossState.STUN)
+            {
+                return ITag.getFloat("_health");
+            }
+
+
+            return v;
+        };
     }
 
     // Update is called once per frame
@@ -134,7 +142,7 @@ public class BossCtrl : MonoBehaviour
         //state handler
         if(state == BossState.Idle)
         {
-            hpLock = Mathf.Clamp(hpLock + dt * 50f, 0, MaxHP);
+            ITag.putFloat("_health", Mathf.Clamp(ITag.getFloat("_health") + dt * 50f, 0, MaxHP));
         }
         else if (state == BossState.Idle0)
         {
@@ -273,17 +281,9 @@ public class BossCtrl : MonoBehaviour
             }
         }
 
-
-        if (state != BossState.STUN){
-            ITag.putFloat("_health", hpLock);
-        }
-        else
-        {
-            hpLock = ITag.getFloat("_health");
-        }
-
         if (state == BossState.STUN && gameObject.GetComponent<IhasTag>().getFloat("_health") <= 0)
         {
+            CamCtrl.setMul(1f);
             GameObject.Destroy(gameObject, 0f);
         }
 
@@ -301,8 +301,6 @@ public class BossCtrl : MonoBehaviour
     {
 
     }
-
-
 
 
     private void Shoot(Vector3 target)

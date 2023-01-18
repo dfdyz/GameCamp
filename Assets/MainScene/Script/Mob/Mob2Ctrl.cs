@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public class Mob2Ctrl : MonoBehaviour
 {
@@ -12,6 +11,10 @@ public class Mob2Ctrl : MonoBehaviour
     private IhasTag ITag;
     [SerializeField]
     private IPhysics physics;
+    [SerializeField]
+    private KillMgrCtrl killMgr;
+    [SerializeField]
+    private Animator animator;
 
     [Header("Sensor")]
     [SerializeField]
@@ -42,11 +45,21 @@ public class Mob2Ctrl : MonoBehaviour
     private int lm;
     private bool FaceRight = true;
     private Vector3 scl;
+    private bool died = false;
 
     // Start is called before the first frame update
     void Start()
     {
         lm = LayerMask.GetMask("Player");
+        ITag.onChangeEvent = (k, v) =>
+        {
+            if(k == "float:_health" && !attacking && !died)
+            {
+                animator.Play("attacked");
+            }
+            
+            return v;
+        };
         lastpos = gameObject.transform.position;
         targetX = lastpos.x;
         scl = SensorRoot.transform.localScale;
@@ -55,6 +68,11 @@ public class Mob2Ctrl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (died)
+        {
+            physics.setVelocityH(0);
+            return;
+        }
         float dt = Time.deltaTime;
         float stun = ITag.getFloat("STUN");
         Vector3 pos = gameObject.transform.position;
@@ -74,7 +92,7 @@ public class Mob2Ctrl : MonoBehaviour
                 physics.setVelocityH(0);
                 targetX = gameObject.transform.position.x;
             }
-            ScanTimer = 0.1f;
+            ScanTimer = 0.2f;
         }
 
         if (hasTarget && attackCoolDownTimer <= 0f && Hit.Overlap(AttackSensor, lm, c) > 0 && !attacking)
@@ -112,7 +130,7 @@ public class Mob2Ctrl : MonoBehaviour
 
         if (gameObject.GetComponent<IhasTag>().getFloat("_health") <= 0)
         {
-            GameObject.Destroy(gameObject, 0f);
+            StartCoroutine(Die());
         }
 
         attackCoolDownTimer = Timer.Update(attackCoolDownTimer, dt);
@@ -128,14 +146,17 @@ public class Mob2Ctrl : MonoBehaviour
         AttackSensor.enabled = false;
         attacking = true;
 
-        attackCoolDownTimer = AttackCoolDown + 0.3f;
-        yield return new WaitForSeconds(0.3f);
+        animator.Play("attack");
+
+        attackCoolDownTimer = AttackCoolDown + 0.28f;
+        yield return new WaitForSeconds(0.28f);
 
         if (Hit.Overlap(AttackField,lm,c) > 0)
         {
             Battle.Damage(c[0].gameObject.GetComponent<IhasTag>(), AttackDamage);
         }
 
+        attackCoolDownTimer = AttackCoolDown + 0.28f;
         //attackCoolDownTimer = DashTime + AttackCoolDown;
         yield return null;
         AttackField.enabled = false;
@@ -143,4 +164,15 @@ public class Mob2Ctrl : MonoBehaviour
         attacking = false;
         attackCoolDownTimer = AttackCoolDown;
     }
+
+    IEnumerator Die()
+    {
+        died = true;
+        animator.Play("die");
+        animator.SetBool("Die", true);
+        yield return new WaitForSeconds(1.2f);
+        killMgr.AddKill("Kill_Mob2");
+        GameObject.Destroy(gameObject, 0f);
+    }
+
 }

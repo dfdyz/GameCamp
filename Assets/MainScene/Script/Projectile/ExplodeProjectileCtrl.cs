@@ -3,27 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
-public class ExplodeProjectileCtrl : MonoBehaviour
+public class ExplodeProjectileCtrl : ProjectileCtrl
 {
     [SerializeField]
-    private Rigidbody2D rb;
-    [SerializeField]
-    private Collider2D expfield;
-    [SerializeField]
-    private Collider2D hitfield;
-    [SerializeField]
-    private float damage = 20f;
-
-
-    private RaycastHit2D[] rchs = new RaycastHit2D[20];
-    private Collider2D[] cld = new Collider2D[35];
-    private int Layer;
-    private float lifetime = -100f;
-    private ContactFilter2D filter;
-    private Functions.FunctionF<GameObject> damageSource = (obj) => 0;
-    private Vector3 lastpos;
+    protected Collider2D expfield;
+    protected Collider2D[] cld = new Collider2D[35];
 
     private void Awake()
     {
@@ -67,32 +52,5 @@ public class ExplodeProjectileCtrl : MonoBehaviour
         }
         lifetime = Timer.Update(lifetime, Time.deltaTime);
         lastpos = gameObject.transform.position;
-    }
-
-    public void Shoot(Vector3 velocity, int layer, float damage, float lifetime)
-    {
-        this.lifetime = lifetime;
-        this.damage = damage;
-        Layer = layer;
-        Shoot(velocity);
-    }
-
-    public void Shoot(Vector3 velocity, int layer, float lifetime)
-    {
-        this.lifetime = lifetime;
-        Layer = layer;
-        Shoot(velocity);
-    }
-
-    public void Shoot(Vector3 velocity)
-    {
-        rb.velocity = velocity;
-        lastpos = gameObject.transform.position;
-    }
-
-    protected bool HitCheck()
-    {
-        filter.layerMask = Layer;
-        return hitfield.Cast(rb.velocity, filter, rchs, -Vector2.Distance(lastpos, gameObject.transform.position)) > 0;
     }
 }

@@ -152,7 +152,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 0.1
+  m_Radius: 0.07
 --- !u!114 &5557650315312215889
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -166,5 +166,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 5228431458630867914}
-  collider: {fileID: 5228431458630867912}
+  hit: {fileID: 5228431458630867912}
   damage: 10
