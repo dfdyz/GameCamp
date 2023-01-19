@@ -40,7 +40,7 @@ public class IPhysics : MonoBehaviour
             VelocityOverrideV.y -= dt;
             if (VelocityOverrideV.y < 0) VelocityOverrideV.y = 0;
         }
-        else if(VelocityOverrideV.x < 0)
+        else if(VelocityOverrideV.y < 0)
         {
             v.y = VelocityOverrideV.x;
             VelocityOverrideV.y = 0;

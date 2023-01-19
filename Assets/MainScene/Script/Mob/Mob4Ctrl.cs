@@ -138,7 +138,7 @@ public class Mob4Ctrl : MonoBehaviour
         }
         p.z = 1f;
         v.z = 0f;
-        ProjectileCtrl fbc = Instantiate<GameObject>(ProjectileObj, p, Quaternion.FromToRotation(Vector3.right, target)).GetComponent<ProjectileCtrl>();
+        ProjectileCtrl fbc = Instantiate<GameObject>(ProjectileObj, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
         fbc.Shoot(v.normalized * ProjectileSpeed, LayerMask.GetMask("World", "Player"), AttackDamage,5f);
 
         attackCoolDownTimer = AttackCoolDown;

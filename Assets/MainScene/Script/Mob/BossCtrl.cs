@@ -10,6 +10,7 @@ public class BossCtrl : MonoBehaviour
     private IhasTag ITag;
     [SerializeField]
     private CamCtrl CamCtrl;
+    public Animator animator;
 
     [Header("Sensor")]
     [SerializeField]
@@ -18,6 +19,12 @@ public class BossCtrl : MonoBehaviour
     private Collider2D TargetSensor;
     [SerializeField]
     private Collider2D AtkField;
+    [SerializeField]
+    private Collider2D AtkField2;
+    [SerializeField]
+    private GameObject shootpos;
+    [SerializeField]
+    private GameObject END;
 
     [Header("Args")]
     [SerializeField]
@@ -36,8 +43,7 @@ public class BossCtrl : MonoBehaviour
     private float HalfAtkDistance = 9f;
     [SerializeField]
     private float atkTime = 9f;
-    [SerializeField]
-    private float atkPrevDelay = 1f;
+    public float atkPrevDelay = 1f;
     [SerializeField]
     private AnimationCurve Atk12AnimCurve;
     [SerializeField]
@@ -64,15 +70,15 @@ public class BossCtrl : MonoBehaviour
     private float ScanTimer = 0f;
     private float attackCoolDownTimer = 0f;
     private int lm;
-    private Vector3 atkfpos;
     private float atkTimer = 0f;
     private float atkPrevTime = 0f;
-    private float atkPrevDelayTimer = 0f;
-    private Hashtable atked = new Hashtable();
+    public float atkPrevDelayTimer = 0f;
+    //private Hashtable atked = new Hashtable();
     private ContactFilter2D filter;
     private int shootCounter = 0;
+    private int AtkCounter = 0;
 
-    private enum BossState
+    public enum BossState
     {
         Idle = -1,
         Idle0 = 0,
@@ -87,7 +93,7 @@ public class BossCtrl : MonoBehaviour
         STUN = 9
     };
 
-    private BossState state;
+    public BossState state;
 
 
     // Start is called before the first frame update
@@ -97,11 +103,11 @@ public class BossCtrl : MonoBehaviour
         filter.useLayerMask = true;
         filter.layerMask = lm;
         filter.useTriggers = false;
-        atkfpos = AtkField.gameObject.transform.localPosition;
         AtkField.gameObject.SetActive(false);
+        AtkField2.gameObject.SetActive(false);
         ITag.onChangeEvent = (k, v) =>
         {
-            if (k == "float:_health" && state != BossState.STUN)
+            if (k == "float:_health" && !(state == BossState.STUN || state == BossState.ATK1 || state == BossState.ATK2 || state == BossState.ATK3))
             {
                 return ITag.getFloat("_health");
             }
@@ -123,6 +129,7 @@ public class BossCtrl : MonoBehaviour
             {
                 if(state == BossState.Idle)
                 {
+                    animator.SetBool("Idle", false);
                     atkPrevDelayTimer = atkPrevDelay;
                     state = BossState.Idle0;
                 }
@@ -130,6 +137,7 @@ public class BossCtrl : MonoBehaviour
             }
             else
             {
+                animator.SetBool("Idle", true);
                 state = BossState.Idle;
                 atkTimer = 0;
                 atkPrevDelayTimer = 0;
@@ -139,6 +147,102 @@ public class BossCtrl : MonoBehaviour
         }
 
 
+        if (state == BossState.Idle)
+        {
+            ITag.putFloat("_health", Mathf.Clamp(ITag.getFloat("_health") + dt * 50f, 0, MaxHP));
+        }
+        else if (state == BossState.Idle0)
+        {
+            if (atkPrevDelayTimer <= 0)
+            {
+                atkTimer = atkTime;
+                state = BossState.ATK1;
+                animator.Play("atk1");
+                AtkField.gameObject.SetActive(true);
+            }
+        }
+        else if (state == BossState.ATK1)
+        {
+
+        }
+        else if (state == BossState.Idle1)
+        {
+            if (atkPrevDelayTimer <= 0)
+            {
+                atkTimer = atkTime;
+                state = BossState.ATK2;
+                animator.Play("atk2");
+                AtkField2.gameObject.SetActive(true);
+            }
+        }
+        else if (state == BossState.ATK2)
+        {
+
+        }
+        else if (state == BossState.Idle2)
+        {
+            if (atkPrevDelayTimer <= 0)
+            {
+                atkTimer = atkTime;
+                state = BossState.ATK4;
+                animator.Play("atk3");
+                AtkCounter = 0;
+            }
+        }
+        else if (state == BossState.ATK3)
+        {
+            if (atkTimer <= 0)
+            {
+                float rot = HalfShootRotAng * 2 / (ShootCount1 - 1) * shootCounter;
+                float angl = HalfShootAng1 * 2 / (ShootBranch1 - 1);
+                for (int i = 0; i < ShootBranch1; ++i)
+                {
+                    Shoot(Quaternion.AngleAxis(HalfShootAng1 - angl * i + rot - HalfShootRotAng, Vector3.forward) * Vector3.down);
+                }
+
+                shootCounter++;
+                atkTimer = ShootDelay;
+            }
+
+            if (shootCounter >= ShootCount1)
+            {
+                animator.SetBool("Idle", true);
+                state = BossState.ATK4;
+                AtkCounter++;
+            }
+        }
+        else if (state == BossState.Idle3)
+        {
+            if(AtkCounter < 3)
+            {
+                if (atkPrevDelayTimer <= 0)
+                {
+                    shootCounter = 0;
+                    atkTimer = ShootDelay;
+                    state = BossState.ATK4;
+                    animator.Play("atk3");
+                }
+            }
+            else
+            {
+                atkPrevDelayTimer = StunTime;
+                state = BossState.STUN;
+            }
+        }
+        else if (state == BossState.ATK4)
+        {
+
+        }
+        else
+        {
+            if (atkPrevDelayTimer <= 0)
+            {
+                atkPrevDelayTimer = atkPrevDelay;
+                state = BossState.Idle0;
+            }
+        }
+        
+        /*
         //state handler
         if(state == BossState.Idle)
         {
@@ -279,10 +383,11 @@ public class BossCtrl : MonoBehaviour
                 atkPrevDelayTimer = atkPrevDelay;
                 state = BossState.Idle0;
             }
-        }
+        }*/
 
-        if (state == BossState.STUN && gameObject.GetComponent<IhasTag>().getFloat("_health") <= 0)
+        if ((state == BossState.STUN || state == BossState.ATK1 || state == BossState.ATK2 || state == BossState.ATK3) && gameObject.GetComponent<IhasTag>().getFloat("_health") <= 0)
         {
+            END.SetActive(true);
             CamCtrl.setMul(1f);
             GameObject.Destroy(gameObject, 0f);
         }
@@ -297,15 +402,32 @@ public class BossCtrl : MonoBehaviour
         atkPrevTime = atkTimer;
     }
 
-    private void Atk(bool lr)
+    public void Atk1()
     {
-
+        if (Hit.Overlap(AtkField, lm, c) > 0)
+        {
+            Battle.Damage(c[0].gameObject.GetComponent<IhasTag>(), AttackDamage);
+        }
+        AtkField.gameObject.SetActive(false);
     }
 
+    public void Atk2()
+    {
+        if (Hit.Overlap(AtkField2, lm, c) > 0)
+        {
+            Battle.Damage(c[0].gameObject.GetComponent<IhasTag>(), AttackDamage);
+        }
+        AtkField2.gameObject.SetActive(false);
+    }
+
+    public void Atk3()
+    {
+        state = BossState.ATK3;
+    }
 
     private void Shoot(Vector3 target)
     {
-        Vector3 p = gameObject.transform.position;
+        Vector3 p = shootpos.transform.position;
         Vector3 v = target;
         p.z = 1f;
         v.z = 0f;

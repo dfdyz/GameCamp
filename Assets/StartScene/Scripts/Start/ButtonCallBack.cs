@@ -19,13 +19,13 @@ public class ButtonCallBack : MonoBehaviour
     public void Botton_Start()
     {
         SavesMgr.StartSave = false;
-        SceneManager.LoadScene("Main");
+        SceneManager.LoadScene("CG", LoadSceneMode.Single);
     }
 
     public void Botton_Saves()
     {
         SavesMgr.StartSave = true;
-        SceneManager.LoadScene("Main");
+        SceneManager.LoadScene("Main", LoadSceneMode.Single);
     }
 
     public void Botton_Exit()

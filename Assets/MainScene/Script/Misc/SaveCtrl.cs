@@ -26,12 +26,15 @@ public class SaveCtrl : MonoBehaviour
     {
         Directory.CreateDirectory(Application.dataPath +"/save");
         SavesMgr.saveStr("save/player", player.Serialize());
+
+        mItemMgrCtrl.ScanItem();
         SavesMgr.saveStr("save/items",items.Serialize());
     }
     public void Read()
     {
         player.Unserialize(SavesMgr.readStr("save/player"));
         player.putBool("EnableSave", SavesMgr.StartSave);
+
         items.Unserialize(SavesMgr.readStr("save/items"));
     }
 }

@@ -11,6 +11,11 @@ public class ItemGenerator : MonoBehaviour
         if(Item) Item.SetActive(true);
     }
 
+    public void DestroyI()
+    {
+        if (Item) GameObject.Destroy(Item);
+    }
+
     public bool check()
     {
         if (Item) return Item.activeSelf;

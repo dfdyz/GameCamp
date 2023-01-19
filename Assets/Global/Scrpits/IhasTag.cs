@@ -145,7 +145,7 @@ public class IhasTag : MonoBehaviour
                         putString(args[1], args[2]);
                         break;
                     case "bool":
-                        putBool(args[1], args[2] == "true" ? true : false);
+                        putBool(args[1], (args[2] == "true" || args[2] == "True") ? true : false);
                         break;
                 }
             }

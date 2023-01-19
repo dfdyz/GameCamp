@@ -51,6 +51,7 @@ public class SpecialPortalCtrl : MonoBehaviour
         ResetMob();
         yield return new WaitForSeconds(0.3f);
         p.GetComponent<PlayerCtrl>().TP(TargetPos.transform.position);
+        if (field) player.putString("Field", field.name);
         yield return new WaitForSeconds(0.5f);
         mc.setTrans(false, 0.2f);
         yield return new WaitForSeconds(0.2f);

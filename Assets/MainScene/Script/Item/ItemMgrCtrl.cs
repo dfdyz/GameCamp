@@ -9,7 +9,6 @@ public class ItemMgrCtrl : MonoBehaviour
     [SerializeField]
     private ItemGenerator[] generators;
 
-
     // Start is called before the first frame update
     void Awake()
     {
@@ -27,7 +26,21 @@ public class ItemMgrCtrl : MonoBehaviour
             {
                 i.Generate();
             }
+            else
+            {
+                i.DestroyI();
+            }
         }
     }
 
+    public void ScanItem()
+    {
+        foreach (ItemGenerator i in generators)
+        {
+            if (tags.getBool(i.gameObject.name))
+            {
+                tags.putBool(i.gameObject.name, i.check());
+            }
+        }
+    }
 }

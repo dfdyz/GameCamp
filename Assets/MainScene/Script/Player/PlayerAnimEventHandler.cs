@@ -5,11 +5,15 @@ using UnityEngine;
 public class PlayerAnimEventHandler : MonoBehaviour
 {
     [SerializeField]
-    private Animator animator;
+    private PlayerCtrl player;
 
     public void setJump(bool s)
     {
-        animator.SetBool("jump", s);
+        //animator.SetBool("jump", s);
     }
 
+    public void ATK()
+    {
+        
+    }
 }

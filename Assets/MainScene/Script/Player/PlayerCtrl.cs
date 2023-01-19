@@ -24,6 +24,8 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField]
     private MaskCtrl maskCtrl;
     [SerializeField]
+    private GameObject forset;
+    [SerializeField]
     private CinemachineVirtualCamera cam;
     [Header(header: "SensorField")]
     [SerializeField]
@@ -83,9 +85,11 @@ public class PlayerCtrl : MonoBehaviour
     private float mpRebornDelay = 0.4f;
     public float spMax = 100f;
 
-    [Header(header: "Visual")]
+    [Header(header: "Visual&Audio")]
     [SerializeField]
     private float VisualRotSpeed = 25f;
+    [SerializeField]
+    private AudioSource A_atk;
 
 
     #region Var
@@ -110,6 +114,7 @@ public class PlayerCtrl : MonoBehaviour
     private bool reborning = false;
     private bool attacking = false;
     private bool MagicMode = false;
+    private bool booklast = false;
     #endregion
 
     void Start()
@@ -124,15 +129,16 @@ public class PlayerCtrl : MonoBehaviour
     {
         if (ITag.getBool("hasItem_¶ùÍ¯»æ±¾"))
         {
-            hpMax = hpMaxBase + hpMaxBase * (ITag.getInt("Kill_Mob1") % 5 * 0.015f);
-            mpMax = mpMaxBase + mpMaxBase * (ITag.getInt("Kill_Mob4") % 5 * 0.015f);
+            hpMax = hpMaxBase + hpMaxBase * (ITag.getInt("Kill_Mob1") * 0.01f);
+            mpMax = mpMaxBase + mpMaxBase * (ITag.getInt("Kill_Mob4") * 0.01f);
+            basicAtkDmg = BasicAtkDamage + BasicAtkDamage * (ITag.getInt("Kill_Mob2") * 0.01f);
         }
         else
         {
             hpMax = hpMaxBase;
             mpMax = mpMaxBase;
+            basicAtkDmg = BasicAtkDamage;
         }
-        basicAtkDmg = BasicAtkDamage + BasicAtkDamage * (ITag.getInt("Kill_Mob2") % 5 * 0.01f);
 
         if (reborning) return;
 
@@ -323,7 +329,7 @@ public class PlayerCtrl : MonoBehaviour
         float mp = ITag.getFloat("_magic");
         if (mpRebornTimer <= 0)
         {
-            mp += mpRebornSpeed * dt;
+            mp += Mathf.Min(200f,mpRebornSpeed * mpMax) * dt;
             if (mp > mpMax) mp = mpMax;
             ITag.putFloat("_magic", mp);
         }
@@ -352,7 +358,7 @@ public class PlayerCtrl : MonoBehaviour
         ProjectileCtrl fbc;
         if (isBig) fbc = Instantiate<GameObject>(bigfireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
         else fbc = Instantiate<GameObject>(fireball, p, Quaternion.FromToRotation(Vector3.right, v)).GetComponent<ProjectileCtrl>();
-        fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), ShootDamage * (isBig ? 1.2f:1f), 5f);
+        fbc.Shoot(v.normalized * FireBallShootSpeed, LayerMask.GetMask("World", "Mob"), basicAtkDmg * (isBig ? 1f:0.8f), 5f);
         ShootCoolDownTimer = ShootCoolDown;
     }
 
@@ -362,7 +368,7 @@ public class PlayerCtrl : MonoBehaviour
         Collider2D ATKS = LevelUp ? BasicAtk2Sensor : BasicAtkSensor;
         ATKS.enabled = true;
         animator.Play("ATKP");
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.25f);
         Hit.Overlap(ATKS, LayerMask.GetMask("World", "Mob"), colliderHited);
         Hashtable atked = new Hashtable();
         foreach (Collider2D c in colliderHited)
@@ -377,11 +383,12 @@ public class PlayerCtrl : MonoBehaviour
                 h = h-basicAtkDmg>=0 ? h-basicAtkDmg : 0;
                 TAG.putFloat("_health", h);
                 atked[c.gameObject] = true;
+                A_atk.Play();
                 //break;
             }
         }
-        ATKS.enabled = false;
         yield return new WaitForSeconds(0.1f);
+        ATKS.enabled = false;
         attacking = false;
         BasicAtkCoolDownTimer = BasicAtkCoolDown;
     }
@@ -444,7 +451,8 @@ public class PlayerCtrl : MonoBehaviour
 
         CurrentSpeedH = 0;
         physics.setVelocityH(0);
-
+        physics.setVelocityOverrideV(0, 0.2f);
+        forset.SetActive(true);
         yield return new WaitForSeconds(1f);
         maskCtrl.setTrans(false, 0.2f);
         yield return new WaitForSeconds(0.5f);
